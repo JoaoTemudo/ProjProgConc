@@ -8,6 +8,7 @@ public class HSet1<E> implements IHSet<E>{
   private int size;
 
   private final ReentrantLock lock= new ReentrantLock();
+  private final Condition hasElem= lock.newCondition();
 
   /**
    * Constructor.
@@ -42,8 +43,12 @@ public class HSet1<E> implements IHSet<E>{
   
   @Override
   public int size() {
-    synchronized (this) {
+    lock.lock();
+    try{
       return size;
+    } finally{
+      if(lock.isHeldByCurrentThread())
+        lock.unlock();
     }
   }
 
@@ -52,15 +57,19 @@ public class HSet1<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    synchronized (this) {
+    lock.lock();
+    try{
       LinkedList<E> list = getEntry(elem);
       boolean r = ! list.contains(elem);
       if (r) {
         list.addFirst(elem);
-        notifyAll(); // there may threads waiting in waitEleme
+        hasElem.signalAll(); // there may threads waiting in waitEleme
         size++;
       }
       return r;
+    } finally{
+      if(lock.isHeldByCurrentThread())
+        lock.unlock();
     }
   }
 
@@ -69,12 +78,16 @@ public class HSet1<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    synchronized (this) {    
+    lock.lock();
+    try{
       boolean r = getEntry(elem).remove(elem);
       if (r) {
         size--;
       }
       return r;
+    } finally{
+      if(lock.isHeldByCurrentThread())
+        lock.unlock();
     }
   }
 
@@ -83,8 +96,12 @@ public class HSet1<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    synchronized (this) {
+    lock.lock();
+    try {
       return getEntry(elem).contains(elem);
+    } finally {
+      if(lock.isHeldByCurrentThread())
+        lock.unlock();
     }
   }
 
@@ -93,28 +110,34 @@ public class HSet1<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    synchronized(this) {
+    lock.lock();
+    try{
       while (! getEntry(elem).contains(elem)) {
         try {
-          wait();
-        }
-        catch(InterruptedException e) { 
+            hasElem.await();
+        } catch(InterruptedException e) { 
           // Ignore interrupts
         }
       }
+    } finally{
+      if (lock.isHeldByCurrentThread())
+        lock.unlock();
     }
   }
   
   @Override
   public void rehash() {
-    synchronized (this) {
+    lock.lock();
+    try {
       LinkedList<E>[] oldTable = table;
       table = createTable(2 * oldTable.length);
       for (LinkedList<E> list : oldTable) {
         for (E elem : list ) {
           getEntry(elem).add(elem);
-        }
-      }
+        } }
+    } finally {
+      if(lock.isHeldByCurrentThread())
+        lock.unlock();
     }
   }
 }
