@@ -1,0 +1,5 @@
+2022-05-25 00:40:45 | testRehash1: executed 10 trials in 54 ms [passed]
+2022-05-25 00:40:45 | testRehash2: executed 10 trials in 19 ms [passed]
+2022-05-25 00:40:45 | testWaitFor1: executed 10 trials in 28 ms [passed]
+2022-05-25 00:40:45 | testWaitFor2: executed 10 trials in 28 ms [passed]
+2022-05-25 00:40:45 | testWaitFor3: executed 10 trials in 30 ms [passed]
