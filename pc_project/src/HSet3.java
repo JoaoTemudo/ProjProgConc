@@ -24,6 +24,7 @@ public class HSet3<E> implements IHSet<E>{
     public HSet3(int ht_size) {
       table = createTable(ht_size);
       locks= new ReentrantReadWriteLock [ht_size];
+      conds= new Condition [ht_size];
       for (int i=0; i<ht_size;i++){
           locks[i]= new ReentrantReadWriteLock();
           conds[i]= locks[i].writeLock().newCondition();
@@ -125,7 +126,7 @@ public class HSet3<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    locks[Math.abs(elem.hashCode() % N)].readLock().lock();
+    locks[Math.abs(elem.hashCode() % N)].writeLock().lock();
     try{
       while (! getEntry(elem).contains(elem)) {
         try {
@@ -143,7 +144,7 @@ public class HSet3<E> implements IHSet<E>{
   @Override
   public void rehash() {
     for(int i=0; i<N;i++){
-        locks[i].readLock().lock();
+        locks[i].writeLock().lock();
     }
     try {
       LinkedList<E>[] oldTable = table;
@@ -154,7 +155,7 @@ public class HSet3<E> implements IHSet<E>{
         } }
     } finally {
         for(int i=0; i<N;i++){
-            locks[i].readLock().unlock();
+            locks[i].writeLock().unlock();
         }
     }
   }
