@@ -76,109 +76,48 @@ public class HSet3<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    wLock.lock();
+    locks[Math.abs(elem.hashCode() % N)].writeLock().lock();
     try{
       LinkedList<E> list = getEntry(elem);
       boolean r = ! list.contains(elem);
       if (r) {
         list.addFirst(elem);
-        hasElem.signalAll(); // there may threads waiting in waitEleme
-        size++;
+        conds[Math.abs(elem.hashCode() % N)].signalAll();// there may threads waiting in waitEleme
       }
       return r;
     } finally{
-      if(wLock.isHeldByCurrentThread())
-        wLock.unlock();
+      if(locks[Math.abs(elem.hashCode() % N)].writeLock().isHeldByCurrentThread())
+      locks[Math.abs(elem.hashCode() % N)].writeLock().unlock();
     }
   }
-
-  /*
-  @Override
-  public boolean add(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try{
-      LinkedList<E> list = getEntry(elem);
-      boolean r = ! list.contains(elem);
-      if (r) {
-        list.addFirst(elem);
-        hasElem.signalAll(); // there may threads waiting in waitEleme
-        size++;
-      }
-      return r;
-    } finally{
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
 
   @Override
   public boolean remove(E elem) {
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    wLock.lock();
+    locks[Math.abs(elem.hashCode() % N)].writeLock().lock();
     try{
       boolean r = getEntry(elem).remove(elem);
-      if (r) {
-        size--;
-      }
       return r;
     } finally{
-      if(wLock.isHeldByCurrentThread())
-        wLock.unlock();
+        if(locks[Math.abs(elem.hashCode() % N)].writeLock().isHeldByCurrentThread())
+        locks[Math.abs(elem.hashCode() % N)].writeLock().unlock();
     }
   }
-
-  /*
-  @Override
-  public boolean remove(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try{
-      boolean r = getEntry(elem).remove(elem);
-      if (r) {
-        size--;
-      }
-      return r;
-    } finally{
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
-
 
   @Override
   public boolean contains(E elem) {
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    rLock.lock();
+    locks[Math.abs(elem.hashCode() % N)].readLock().lock();
     try {
       return getEntry(elem).contains(elem);
     } finally {
-      rLock.unlock();
+        locks[Math.abs(elem.hashCode() % N)].readLock().unlock();
     }
   }
-
-  /*
-  @Override
-  public boolean contains(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try {
-      return getEntry(elem).contains(elem);
-    } finally {
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
   
   
   @Override
@@ -186,47 +125,26 @@ public class HSet3<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    wLock.lock();
+    locks[Math.abs(elem.hashCode() % N)].readLock().lock();
     try{
       while (! getEntry(elem).contains(elem)) {
         try {
-            hasElem.await();
+            conds[Math.abs(elem.hashCode() % N)].await();
         } catch(InterruptedException e) { 
           // Ignore interrupts
         }
       }
     } finally{
-      if(wLock.isHeldByCurrentThread())
-        wLock.unlock();
+        if(locks[Math.abs(elem.hashCode() % N)].writeLock().isHeldByCurrentThread())
+        locks[Math.abs(elem.hashCode() % N)].writeLock().unlock();
     }
   }
   
-  
-  /*
-  @Override
-  public void waitFor(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try{
-      while (! getEntry(elem).contains(elem)) {
-        try {
-            hasElem.await();
-        } catch(InterruptedException e) { 
-          // Ignore interrupts
-        }
-      }
-    } finally{
-      if (lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
-  
-
   @Override
   public void rehash() {
-    wLock.lock();
+    for(int i=0; i<N;i++){
+        locks[i].readLock().lock();
+    }
     try {
       LinkedList<E>[] oldTable = table;
       table = createTable(2 * oldTable.length);
@@ -235,27 +153,11 @@ public class HSet3<E> implements IHSet<E>{
           getEntry(elem).add(elem);
         } }
     } finally {
-      if(wLock.isHeldByCurrentThread())
-        wLock.unlock();
+        for(int i=0; i<N;i++){
+            locks[i].readLock().unlock();
+        }
     }
   }
-
-  /*
-  @Override
-  public void rehash() {
-    lock.lock();
-    try {
-      LinkedList<E>[] oldTable = table;
-      table = createTable(2 * oldTable.length);
-      for (LinkedList<E> list : oldTable) {
-        for (E elem : list ) {
-          getEntry(elem).add(elem);
-        } }
-    } finally {
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
 }
 
 
