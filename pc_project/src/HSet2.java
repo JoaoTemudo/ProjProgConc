@@ -56,19 +56,6 @@ public class HSet2<E> implements IHSet<E>{
     }
   }
 
-  /*
-  @Override
-  public int size() {
-    lock.lock();
-    try{
-      return size;
-    } finally{
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
-
-
   @Override
   public boolean add(E elem) {
     if (elem == null) {
@@ -90,28 +77,6 @@ public class HSet2<E> implements IHSet<E>{
     }
   }
 
-  /*
-  @Override
-  public boolean add(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try{
-      LinkedList<E> list = getEntry(elem);
-      boolean r = ! list.contains(elem);
-      if (r) {
-        list.addFirst(elem);
-        hasElem.signalAll(); // there may threads waiting in waitEleme
-        size++;
-      }
-      return r;
-    } finally{
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
-
   @Override
   public boolean remove(E elem) {
     if (elem == null) {
@@ -129,26 +94,6 @@ public class HSet2<E> implements IHSet<E>{
         wLock.unlock();
     }
   }
-
-  /*
-  @Override
-  public boolean remove(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try{
-      boolean r = getEntry(elem).remove(elem);
-      if (r) {
-        size--;
-      }
-      return r;
-    } finally{
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
-
 
   @Override
   public boolean contains(E elem) {
@@ -162,21 +107,6 @@ public class HSet2<E> implements IHSet<E>{
       rLock.unlock();
     }
   }
-
-  /*
-  @Override
-  public boolean contains(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try {
-      return getEntry(elem).contains(elem);
-    } finally {
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
   
   
   @Override
@@ -199,28 +129,6 @@ public class HSet2<E> implements IHSet<E>{
     }
   }
   
-  
-  /*
-  @Override
-  public void waitFor(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    lock.lock();
-    try{
-      while (! getEntry(elem).contains(elem)) {
-        try {
-            hasElem.await();
-        } catch(InterruptedException e) { 
-          // Ignore interrupts
-        }
-      }
-    } finally{
-      if (lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
-  
 
   @Override
   public void rehash() {
@@ -238,22 +146,6 @@ public class HSet2<E> implements IHSet<E>{
     }
   }
 
-  /*
-  @Override
-  public void rehash() {
-    lock.lock();
-    try {
-      LinkedList<E>[] oldTable = table;
-      table = createTable(2 * oldTable.length);
-      for (LinkedList<E> list : oldTable) {
-        for (E elem : list ) {
-          getEntry(elem).add(elem);
-        } }
-    } finally {
-      if(lock.isHeldByCurrentThread())
-        lock.unlock();
-    }
-  }*/
 }
 
 
