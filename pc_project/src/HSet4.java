@@ -13,21 +13,59 @@ public class HSet4<E> implements IHSet<E>{
   private final Ref.View<TArray.View<Node<E>>> table;
   private final Ref.View<Integer> size;
 
-  public HSet4(int h_size) {
+  public HSet4(int h_size) 
+  {
     table = STM.newRef(STM.newTArray(h_size));
     size = STM.newRef(0); 
   }
 
   @Override
-  public int capacity() {
+  public int capacity() 
+  {
     return table.get().length();
   }
 
   @Override
-  public int size() {
+  public int size() 
+  {
     return size.get();
   }
 
+  private Node<E> getEntry(E elem) 
+  {
+    return table.get().apply(hashMath(elem));
+  }
+
+  private int hashMath(E elem)
+  {
+    return Math.abs(elem.hashCode() % table.get().length());
+  }
+
+  @Override
+  public boolean add(E elem) 
+  {
+    if (elem == null) {
+      throw new IllegalArgumentException();
+    }
+    return STM.atomic(() ->{
+      if(contains(elem)){
+        return false;
+      }
+      Node<E> curNode = getEntry(elem);
+      Node<E> newNode = new Node<E>();
+      newNode.value = elem;
+      if(curNode != null){
+        curNode.prev.set(newNode);
+      }
+      newNode.next.set(curNode);
+      TArray.View<Node<E>> nTable = table.get();
+      nTable.update(hashMath(elem), newNode);
+      STM.increment(size, 1);
+      return true;
+    });
+  }
+  
+  /*
   @Override
   public boolean add(E elem) {
     if (elem == null) {
@@ -35,8 +73,41 @@ public class HSet4<E> implements IHSet<E>{
     }
     // TODO
     throw new Error("not implemented");
+  }*/
+
+
+  @Override
+  public boolean remove(E elem) {
+    if (elem == null) {
+      throw new IllegalArgumentException();
+    }
+    return STM.atomic(() ->{
+      Node<E> curNode = getEntry(elem);
+      while(curNode != null){
+        if(elem.equals(curNode.value)){
+          Node<E> prevNode = curNode.prev.get();
+          Node<E> nextNode = curNode.next.get();
+          
+          if(nextNode != null){
+            nextNode.prev.set(prevNode);
+          }
+          if(prevNode != null){
+            prevNode.next.set(nextNode);           
+          }else{
+            TArray.View<Node<E>> nTable = table.get();
+            nTable.update(hashMath(elem), nextNode);
+          }
+          
+          STM.increment(size, -1);
+          return true;
+        }
+        curNode = curNode.next.get();
+      }
+      return false;
+    });
   }
 
+  /* 
   @Override
   public boolean remove(E elem) {
     if (elem == null) {
@@ -45,7 +116,27 @@ public class HSet4<E> implements IHSet<E>{
     // TODO
     throw new Error("not implemented");
   }
+  */
+  
+  @Override
+  public boolean contains(E elem) {
+    if (elem == null) {
+      throw new IllegalArgumentException();
+    }
 
+    return STM.atomic(() ->{
+      Node<E> curNode = getEntry(elem);
+      while(curNode != null){
+        if(elem.equals(curNode.value)){
+          return true;
+        }
+        curNode = curNode.next.get();
+      }
+      return false;
+    });
+  }
+
+  /*
   @Override
   public boolean contains(E elem) {
     if (elem == null) {
@@ -54,6 +145,7 @@ public class HSet4<E> implements IHSet<E>{
     // TODO
     throw new Error("not implemented");
   }
+  */
 
   @Override
   public void waitFor(E elem) {
