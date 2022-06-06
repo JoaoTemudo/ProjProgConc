@@ -156,6 +156,17 @@ public class HSet4<E> implements IHSet<E>{
     throw new Error("not implemented");
   }
 
+  /*
+  @Override
+  public void waitFor(E elem) {
+    if (elem == null) {
+      throw new IllegalArgumentException();
+    }
+    // TODO
+    throw new Error("not implemented");
+  }
+  */
+
   @Override
   public void rehash() {
     // TODO
