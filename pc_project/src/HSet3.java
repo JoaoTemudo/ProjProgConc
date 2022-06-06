@@ -29,7 +29,7 @@ public class HSet3<E> implements IHSet<E>{
           locks[i]= new ReentrantReadWriteLock();
           conds[i]= locks[i].writeLock().newCondition();
       }
-      N= locks.length;
+      N= ht_size;
     }
     
   
