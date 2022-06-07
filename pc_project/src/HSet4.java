@@ -65,17 +65,6 @@ public class HSet4<E> implements IHSet<E>{
     });
   }
   
-  /*
-  @Override
-  public boolean add(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    // TODO
-    throw new Error("not implemented");
-  }*/
-
-
   @Override
   public boolean remove(E elem) {
     if (elem == null) {
@@ -107,17 +96,6 @@ public class HSet4<E> implements IHSet<E>{
     });
   }
 
-  /* 
-  @Override
-  public boolean remove(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    // TODO
-    throw new Error("not implemented");
-  }
-  */
-  
   @Override
   public boolean contains(E elem) {
     if (elem == null) {
@@ -136,17 +114,6 @@ public class HSet4<E> implements IHSet<E>{
     });
   }
 
-  /*
-  @Override
-  public boolean contains(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    // TODO
-    throw new Error("not implemented");
-  }
-  */
-
   @Override
   public void waitFor(E elem) {
     if (elem == null) {
@@ -160,24 +127,12 @@ public class HSet4<E> implements IHSet<E>{
     });
   }
 
-  /*
-  @Override
-  public void waitFor(E elem) {
-    if (elem == null) {
-      throw new IllegalArgumentException();
-    }
-    // TODO
-    throw new Error("not implemented");
-  }
-  */
-
   @Override
   public void rehash() {
-
     STM.atomic(() ->{
       TArray.View<Node<E>> oldTable = table.get();
       Node<E> curNode;
-      table.set(STM.newTArray(size.get()*2));
+      table.set(STM.newTArray(oldTable.length()*2));
       size.set(0);
       for(int i = 0; i < oldTable.length(); i++)
       {
@@ -189,15 +144,5 @@ public class HSet4<E> implements IHSet<E>{
         }
       }
     });
-    
-
   }
-
-  /*
-  @Override
-  public void rehash() {
-    // TODO
-    throw new Error("not implemented");
-  }
-  */
 }
