@@ -152,8 +152,12 @@ public class HSet4<E> implements IHSet<E>{
     if (elem == null) {
       throw new IllegalArgumentException();
     }
-    // TODO
-    throw new Error("not implemented");
+    STM.atomic(() ->{
+      if(!contains(elem))
+      {
+        STM.retry();
+      }
+    });
   }
 
   /*
@@ -169,8 +173,31 @@ public class HSet4<E> implements IHSet<E>{
 
   @Override
   public void rehash() {
+
+    STM.atomic(() ->{
+      TArray.View<Node<E>> oldTable = table.get();
+      Node<E> curNode;
+      table.set(STM.newTArray(size.get()*2));
+      size.set(0);
+      for(int i = 0; i < oldTable.length(); i++)
+      {
+        curNode = oldTable.apply(i);
+        while(curNode != null)
+        {
+          add(curNode.value);
+          curNode = curNode.next.get();
+        }
+      }
+    });
+    
+
+  }
+
+  /*
+  @Override
+  public void rehash() {
     // TODO
     throw new Error("not implemented");
   }
-
+  */
 }
